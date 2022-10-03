@@ -1,0 +1,45 @@
+[package]
+name = "elektron_python"
+version = "0.1.5"
+edition = "2021"
+
+[lib]
+name = "elektron_python"
+crate-type = ["rlib", "cdylib"]
+
+# [profile.release]
+# # or "z"
+# opt-level = "s"
+# lto = "fat"
+# codegen-units = 1
+
+[dependencies]
+pyo3 = { version = "0.16.5", features = ["extension-module"] }
+thiserror = "1.0.32"
+lazy_static = "1.4.0"
+regex = "1.6.0"
+rust-fuzzy-search = "0.1.1"
+ndarray = "0.15.4"
+itertools = "0.10.3"
+comfy-table = "6.0.0"
+clap = { version = "4", features = ["derive"] }
+rand = "0.8.5"
+plotters = "0.3.4"
+elektron_sexp = "0.1.5"
+elektron_spice = "0.1.7"
+elektron_plot = "0.1.5"
+elektron_ngspice = "0.1.0"
+
+[build-system]
+requires = ["setuptools", "wheel", "setuptools-rust"]
+
+[features]
+default = ["pyo3/extension-module"]
+
+[dependencies.uuid]
+version = "1.1.2"
+features = [
+    "v4",                # Lets you generate random UUIDs
+    "fast-rng",          # Use a faster (but still sufficiently random) RNG
+    "macro-diagnostics", # Enable better diagnostics for compile-time UUIDs
+] 
