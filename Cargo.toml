@@ -26,7 +26,7 @@ clap = { version = "4", features = ["derive"] }
 rand = "0.8.5"
 plotters = "0.3.4"
 elektron_sexp = "0.1.5"
-elektron_spice = "0.1.8"
+elektron_spice = "0.1.9"
 elektron_plot = "0.1.5"
 elektron_ngspice = "0.1.0"
 
