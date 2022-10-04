@@ -225,7 +225,6 @@ impl Simulation {
     }
 
     pub fn plot(&self, name: &str, filename: Option<&str>) -> Result<(), Error> {
-        println!("plot circuit");
         /* let plot = self.ngspice.current_plot().unwrap();
         let vecs = self.ngspice.all_vecs(&plot).unwrap(); */
         let re = self.simulation.ngspice.vector_info("time").unwrap();
@@ -260,11 +259,9 @@ impl Simulation {
         };
 
 
-        println!("write result circuit");
     let root = BitMapBackend::new("0.png", (640, 480)).into_drawing_area();
     root.fill(&WHITE).unwrap();
     let mut chart = ChartBuilder::on(&root)
-        .caption("y=x^2", ("sans-serif", 50).into_font())
         .margin(5)
         .x_label_area_size(30)
         .y_label_area_size(30)
