@@ -294,16 +294,12 @@ impl Element {
             slf.endpos = Some(Array1::from_vec(dot.pos));
             return slf;
         }
-        /* if let Some(pin) = pin {
-        let reference: Result<String, PyErr> = reference.extract();
-        let pin: Result<String, PyErr> = pin.extract();
-        if let (Ok(reference), Ok(pin)) = (&reference, pin) {
-         slf.atref = Some(reference.to_string());
-         slf.atpin = Some(pin);
-         return slf;
+        let label: Result<Label, PyErr> = element.extract();
+        if let Ok(label) = label {
+            slf.endpos = Some(Array1::from_vec(label.pos));
+            return slf;
         }
-        } */
-        panic!("unknown type for at: {:?}", element);
+        panic!("unknown type for tox: {:?}", element);
     }
     pub fn toy<'py>(
         mut slf: PyRefMut<'py, Self>,
@@ -315,16 +311,12 @@ impl Element {
             slf.endpos = Some(Array1::from_vec(dot.pos));
             return slf;
         }
-        /* if let Some(pin) = pin {
-        let reference: Result<String, PyErr> = reference.extract();
-        let pin: Result<String, PyErr> = pin.extract();
-        if let (Ok(reference), Ok(pin)) = (&reference, pin) {
-         slf.atref = Some(reference.to_string());
-         slf.atpin = Some(pin);
-         return slf;
+        let label: Result<Label, PyErr> = element.extract();
+        if let Ok(label) = label {
+            slf.endpos = Some(Array1::from_vec(label.pos));
+            return slf;
         }
-        } */
-        panic!("unknown type for at: {:?}", element);
+        panic!("unknown type for toy: {:?}", element);
     }
     pub fn mirror<'py>(
         mut slf: PyRefMut<'py, Self>,
