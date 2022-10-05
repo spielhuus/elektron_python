@@ -90,7 +90,10 @@ impl Draw {
             return Ok(());
         }
         let label: Result<model::Label, PyErr> = item.extract();
-        if let Ok(label) = label {
+        if let Ok(mut label) = label {
+            if label.pos == vec![0.0, 0.0] {
+                label.pos = vec![self.last_pos[0], self.last_pos[1]];
+            }
             self.add_label(label)?;
             return Ok(());
         }

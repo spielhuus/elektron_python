@@ -123,6 +123,11 @@ impl Line {
             slf.toy = Some(Array1::from_vec(dot.pos));
             return slf;
         }
+        let label: Result<Label, PyErr> = element.extract();
+        if let Ok(label) = label {
+            slf.toy = Some(Array1::from_vec(label.pos));
+            return slf;
+        }
         if let Some(pin) = pin {
             let reference: Result<String, PyErr> = element.extract();
             let pin: Result<String, PyErr> = pin.extract();
@@ -174,6 +179,7 @@ impl Dot {
 #[pyclass]
 #[derive(Debug, Clone)]
 pub struct Label {
+    pub pos: Vec<f64>,
     pub name: String,
     pub angle: f64,
 }
@@ -181,7 +187,7 @@ pub struct Label {
 impl Label {
     #[new]
     pub fn new(name: String) -> Self {
-        Label { name, angle: 0.0 }
+        Label { pos: vec![0.0, 0.0], name, angle: 0.0 }
     }
     pub fn rotate<'py>(
         mut slf: PyRefMut<'py, Self>,
