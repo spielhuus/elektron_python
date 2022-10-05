@@ -1,4 +1,5 @@
 #![allow(clippy::borrow_deref_ref)]
+use lazy_static::lazy_static;
 use crate::circuit::Circuit;
 use crate::error::Error;
 use elektron_sexp::{
@@ -8,11 +9,12 @@ use elektron_sexp::{
 use elektron_plot as plot;
 use itertools::Itertools;
 use pyo3::prelude::*;
+use std::collections::HashMap;
 use std::env::temp_dir;
 use std::{fs::{File, self}, io::Read};
 use uuid::Uuid;
 
-use ndarray::{arr1, arr2, Array1};
+use ndarray::{arr1, arr2, Array1, Array2};
 use rand::Rng;
 
 mod model;
@@ -20,6 +22,14 @@ mod error;
 mod circuit;
 
 const LABEL_BORDER: f64 = 2.54;
+
+lazy_static! {
+    pub static ref MIRROR: HashMap<String, Array2<f64>> = HashMap::from([ //TODO make global
+        (String::from(""), arr2(&[[1., 0.], [0., -1.]])),
+        (String::from("x"), arr2(&[[1., 0.], [0., 1.]])),
+        (String::from("y"), arr2(&[[-1., 0.], [0., -1.]])),
+    ]);
+}
 
 macro_rules! uuid {
     () => {
@@ -175,6 +185,10 @@ impl Draw {
             arr1(&[end[0], start_pos[1]])
         } else if let Some(end) = line.toy {
             arr1(&[start_pos[0], end[1]])
+        } else if let (Some(toref), Some(topin)) = (line.toxref, line.toxpin) {
+            arr1(&[self.pin_pos(toref, topin)[0], start_pos[1]])
+        } else if let (Some(toref), Some(topin)) = (line.toyref, line.toypin) {
+            arr1(&[start_pos[0], self.pin_pos(toref, topin)[1]])
         } else {
             match line.direction {
                 model::Direction::Up => arr1(&[start_pos[0], start_pos[1] - line.length]),
@@ -212,8 +226,13 @@ impl Draw {
         let theta = -element.angle.to_radians();
         let rot = arr2(&[[theta.cos(), -theta.sin()], [theta.sin(), theta.cos()]]);
         let mut verts: Array1<f64> = sym_pin.at.dot(&rot);
-        verts = verts.mapv_into(|v| format!("{:.2}", v).parse::<f64>().unwrap());
+        verts = if let Some(mirror) = &element.mirror {
+            verts.dot(MIRROR.get(mirror).unwrap())
+        } else {
+            verts.dot(MIRROR.get(&String::new()).unwrap())
+        };
         verts = arr1(&[pos[0], pos[1]]) - &verts;
+        verts = verts.mapv_into(|v| format!("{:.2}", v).parse::<f64>().unwrap());
 
         if let Some(end_pos) = &element.endpos {
             let pins = lib_symbol.pins(element.unit)?;

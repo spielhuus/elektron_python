@@ -21,6 +21,10 @@ pub struct Line {
     pub atref: Option<String>,
     pub atpin: Option<String>,
     pub atdot: Option<Dot>,
+    pub toxref: Option<String>,
+    pub toxpin: Option<String>,
+    pub toyref: Option<String>,
+    pub toypin: Option<String>,
     pub tox: Option<Array1<f64>>,
     pub toy: Option<Array1<f64>>,
 }
@@ -36,6 +40,10 @@ impl Line {
             atref: None,
             atpin: None,
             atdot: None,
+            toxref: None,
+            toxpin: None,
+            toyref: None,
+            toypin: None,
             tox: None,
             toy: None,
         }
@@ -86,52 +94,46 @@ impl Line {
         mut slf: PyRefMut<'py, Self>,
         _py: Python,
         element: &'_ PyAny,
+        pin: Option<&'_ PyAny>,
     ) -> PyRefMut<'py, Self> {
         let dot: Result<Dot, PyErr> = element.extract();
         if let Ok(dot) = dot {
             slf.tox = Some(Array1::from_vec(dot.pos));
             return slf;
         }
-        /* if let Some(pin) = pin {
-        let reference: Result<String, PyErr> = reference.extract();
-        let pin: Result<String, PyErr> = pin.extract();
-        if let (Ok(reference), Ok(pin)) = (&reference, pin) {
-         slf.atref = Some(reference.to_string());
-         slf.atpin = Some(pin);
-         return slf;
+        if let Some(pin) = pin {
+            let reference: Result<String, PyErr> = element.extract();
+            let pin: Result<String, PyErr> = pin.extract();
+            if let (Ok(reference), Ok(pin)) = (&reference, pin) {
+                slf.toxref = Some(reference.to_string());
+                slf.toxpin = Some(pin);
+                return slf;
+            }
         }
-        } */
         panic!("unknown type for at: {:?}", element);
     }
     pub fn toy<'py>(
         mut slf: PyRefMut<'py, Self>,
         _py: Python,
         element: &'_ PyAny,
+        pin: Option<&'_ PyAny>,
     ) -> PyRefMut<'py, Self> {
         let dot: Result<Dot, PyErr> = element.extract();
         if let Ok(dot) = dot {
             slf.toy = Some(Array1::from_vec(dot.pos));
             return slf;
         }
-        /* if let Some(pin) = pin {
-        let reference: Result<String, PyErr> = reference.extract();
-        let pin: Result<String, PyErr> = pin.extract();
-        if let (Ok(reference), Ok(pin)) = (&reference, pin) {
-         slf.atref = Some(reference.to_string());
-         slf.atpin = Some(pin);
-         return slf;
+        if let Some(pin) = pin {
+            let reference: Result<String, PyErr> = element.extract();
+            let pin: Result<String, PyErr> = pin.extract();
+            if let (Ok(reference), Ok(pin)) = (&reference, pin) {
+                slf.toyref = Some(reference.to_string());
+                slf.toypin = Some(pin);
+                return slf;
+            }
         }
-        } */
-        panic!("unknown type for at: {:?}", element);
+        panic!("unknown type for toy: {:?}:{:?}", element, pin);
     }
-    /* pub fn tox<'py>(mut slf: PyRefMut<'py, Self>, _py: Python, element: f64) -> PyRefMut<'py, Self> {
-         slf.x_pos = element;
-         slf
-    }
-    pub fn toy<'py>(mut slf: PyRefMut<'py, Self>, _py: Python, element: f64) -> PyRefMut<'py, Self> {
-         slf.x_pos = element;
-         slf
-    } */
 }
 
 #[pyclass]
