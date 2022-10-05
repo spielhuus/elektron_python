@@ -255,7 +255,7 @@ impl Draw {
             element.value.to_string(),
         );
         if let Some(mirror) = element.mirror {
-            symbol.mirror = mirror.chars().into_iter().map(|c| {c.to_string()}).collect();
+            symbol.mirror = Some(mirror);
         }
         if let Some(properties) = element.args {
             symbol.on_schema = if let Some(on_schema) = properties.get("on_schema") {
@@ -524,10 +524,12 @@ impl Draw {
             position[lib_pos] += 1;
         }
         position.rotate_right(symbol_shift);
-        if symbol.mirror.contains(&String::from('x')) {
-            position = vec![position[0], position[3], position[2], position[1]];
-        } else if symbol.mirror.contains(&String::from("y")) {
-            position = vec![position[2], position[1], position[0], position[3]];
+        if let Some(mirror) = &symbol.mirror {
+            if mirror == "x" {
+                position = vec![position[0], position[3], position[2], position[1]];
+            } else if mirror == "y" {
+                position = vec![position[2], position[1], position[0], position[3]];
+            }
         }
         position
     }
