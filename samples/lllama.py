@@ -30,11 +30,11 @@ draw.add(out_dot := Dot())
 draw.add(Line())
 draw.add(Label("OUTPUT"))
 
-draw.add(Element("R1", "Device:R", value="1Meg", unit=1).anchor(2).at(in_dot))
-draw.add(Element("GND", "power:GND", value="GND", unit=1).at("R1", "2"))
+draw.add(Element("R1", "Device:R", value="1Meg", unit=1).anchor(1).rotate(180).at(in_dot))
+draw.add(Element("GND", "power:GND", value="GND", unit=1).rotate(180).at("R1", "2"))
 
-draw.add(Element("R5", "Device:R", value="100k", unit=1).anchor(2).at(out_dot))
-draw.add(Element("GND", "power:GND", value="GND", unit=1).at("R5", "2"))
+draw.add(Element("R5", "Device:R", value="100k", unit=1).anchor(1).rotate(180).at(out_dot))
+draw.add(Element("GND", "power:GND", value="GND", unit=1).rotate(180).at("R5", "2"))
 
 draw.add(Line().up().length(12.7).at(u1_dot_out))
 draw.add(feedback_dot_1 := Dot())
@@ -76,8 +76,7 @@ draw.add(Element("GND", "power:GND", value="GND", unit=1, on_schema="no").at("U2
 draw.add(Element("GND", "power:+5V", value="+5V", unit=1, on_schema="no").at("U2", "7"))
 
 draw.write("llama.kicad_sch")
-#res = draw.plot(None, False, 3)
-#print(res)
+draw.plot("llama.svg", False, 3, "png")
 
 print("create circuit")
 circuit = draw.circuit(['/home/etienne/elektron/samples/files/spice/'])

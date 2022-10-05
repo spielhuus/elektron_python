@@ -25,10 +25,10 @@ comfy-table = "6.0.0"
 clap = { version = "4", features = ["derive"] }
 rand = "0.8.5"
 plotters = "0.3.4"
-elektron_sexp = "0.1.6"
-elektron_spice = "0.1.11"
-elektron_plot = "0.1.6"
-elektron_ngspice = "0.1.0"
+elektron_sexp = "0.1"
+elektron_spice = "0.1"
+elektron_plot = "0.1"
+elektron_ngspice = "0.1"
 
 [build-system]
 requires = ["setuptools", "wheel", "setuptools-rust"]
