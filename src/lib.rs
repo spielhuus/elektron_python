@@ -218,7 +218,9 @@ impl Draw {
         let mut lib_symbol = self.get_library(element.library.as_str())?;
         if !lib_symbol.extends.is_empty() {
             let library = &element.library[0..element.library.find(':').unwrap()];
+            println!("Load library: {}{}", library, lib_symbol.extends.as_str());
             let mut extend_symbol = self.get_library(format!("{}{}", library, lib_symbol.extends.as_str()).as_str())?;
+
             extend_symbol.lib_id = element.library.to_string();
             extend_symbol.property = lib_symbol.property.clone();
             lib_symbol = extend_symbol;
