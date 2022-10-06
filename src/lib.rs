@@ -217,7 +217,8 @@ impl Draw {
     fn add_symbol(&mut self, element: model::Element) -> Result<(), Error> {
         let mut lib_symbol = self.get_library(element.library.as_str())?;
         if !lib_symbol.extends.is_empty() {
-            let mut extend_symbol = self.get_library(&lib_symbol.extends)?;
+            let library = &element.library[0..element.library.find(':').unwrap()];
+            let mut extend_symbol = self.get_library(format!("{}{}", library, lib_symbol.extends.as_str()).as_str())?;
             extend_symbol.lib_id = element.library.to_string();
             extend_symbol.property = lib_symbol.property.clone();
             lib_symbol = extend_symbol;
