@@ -176,6 +176,43 @@ impl Dot {
         panic!("unknown type for at: {:?}", reference);
     }
 }
+
+#[pyclass]
+#[derive(Debug, Clone)]
+pub struct Nc {
+    pub pos: Vec<f64>,
+    pub atref: Option<String>,
+    pub atpin: Option<String>,
+}
+#[pymethods]
+impl Nc {
+    #[new]
+    fn new() -> Self {
+        Self {
+            pos: vec![0.0, 0.0],
+            atref: None,
+            atpin: None,
+        }
+    }
+    pub fn at<'py>(
+        mut slf: PyRefMut<'py, Self>,
+        _py: Python,
+        reference: &'_ PyAny,
+        pin: Option<&'_ PyAny>,
+    ) -> PyRefMut<'py, Self> {
+        if let Some(pin) = pin {
+            let reference: Result<String, PyErr> = reference.extract();
+            let pin: Result<String, PyErr> = pin.extract();
+            if let (Ok(reference), Ok(pin)) = (&reference, pin) {
+                slf.atref = Some(reference.to_string());
+                slf.atpin = Some(pin);
+                return slf;
+            }
+        }
+        panic!("unknown type for at: {:?}", reference);
+    }
+}
+
 #[pyclass]
 #[derive(Debug, Clone)]
 pub struct Label {
@@ -209,6 +246,7 @@ pub struct Element {
     pub args: Option<HashMap<String, String>>,
     pub angle: f64,
     pub pin: u32,
+    pub pos: Option<(f64, f64)>,
     pub atref: Option<String>,
     pub atpin: Option<String>,
     pub atdot: Option<Dot>,
@@ -243,6 +281,7 @@ impl Element {
             args,
             angle: 0.0,
             pin: 1,
+            pos: None,
             atref: None,
             atpin: None,
             atdot: None,
@@ -271,6 +310,11 @@ impl Element {
         let dot: Result<Dot, PyErr> = reference.extract();
         if let Ok(dot) = dot {
             slf.atdot = Some(dot);
+            return slf;
+        }
+        let dot: Result<(f64, f64), PyErr> = reference.extract();
+        if let Ok(dot) = dot {
+            slf.pos = Some(dot);
             return slf;
         }
         if let Some(pin) = pin {

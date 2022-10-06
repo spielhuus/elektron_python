@@ -4,7 +4,7 @@ use crate::circuit::Circuit;
 use crate::error::Error;
 use elektron_sexp::{
      Effects, Junction, Label, LibrarySymbol, Property, SchemaElement, Stroke, Symbol, Wire,
-     uuid, Bounds, Library, Schema, Shape, Transform,
+     uuid, Bounds, Library, Schema, Shape, Transform, NoConnect,
 };
 use elektron_plot as plot;
 use itertools::Itertools;
@@ -86,7 +86,13 @@ impl Draw {
             if dot.pos == vec![0.0, 0.0] {
                 dot.pos = vec![self.last_pos[0], self.last_pos[1]];
             }
-            self.add_dot(&dot)?;
+            self.add_dot(&mut dot)?;
+            self.last_pos = arr1(&[dot.pos[0], dot.pos[1]]);
+            return Ok(());
+        }
+        let nc: PyResult<PyRefMut<model::Nc>> = item.extract();
+        if let Ok(mut nc) = nc {
+            self.add_nc(&mut nc)?;
             return Ok(());
         }
         let label: Result<model::Label, PyErr> = item.extract();
@@ -150,11 +156,36 @@ impl Draw {
 }
 
 impl Draw {
-    fn add_dot(&mut self, dot: &model::Dot) -> Result<(), Error> {
+    fn add_dot(&mut self, dot: &mut model::Dot) -> Result<(), Error> {
+        let pos = if let (Some(atref), Some(atpin)) = (&dot.atref, &dot.atpin) {
+            let pos = self.pin_pos(atref.to_string(), atpin.to_string());
+            dot.pos = vec![pos[0], pos[1]];
+            pos
+        } else {
+            self.last_pos.clone()
+        };
         self.schema.push(
             0,
             SchemaElement::Junction(Junction::new(
-                round!(arr1(&[dot.pos[0], dot.pos[1]])),
+                pos,
+                uuid!(),
+            )),
+        )?;
+        Ok(())
+    }
+
+    fn add_nc(&mut self, dot: &mut model::Nc) -> Result<(), Error> {
+        let pos = if let (Some(atref), Some(atpin)) = (&dot.atref, &dot.atpin) {
+            let pos = self.pin_pos(atref.to_string(), atpin.to_string());
+            dot.pos = vec![pos[0], pos[1]];
+            pos
+        } else {
+            self.last_pos.clone()
+        };
+        self.schema.push(
+            0,
+            SchemaElement::NoConnect(NoConnect::new(
+                pos,
                 uuid!(),
             )),
         )?;
@@ -215,21 +246,15 @@ impl Draw {
         Ok(())
     }
     fn add_symbol(&mut self, element: model::Element) -> Result<(), Error> {
-        let mut lib_symbol = self.get_library(element.library.as_str())?;
-        if !lib_symbol.extends.is_empty() {
-            let library = &element.library[0..element.library.find(':').unwrap()];
-            let mut extend_symbol = self.get_library(format!("{}:{}", library, lib_symbol.extends.as_str()).as_str())?;
-
-            extend_symbol.lib_id = element.library.to_string();
-            extend_symbol.property = lib_symbol.property.clone();
-            lib_symbol = extend_symbol;
-        }
+        let lib_symbol = self.get_library(element.library.as_str())?;
         let sym_pin = lib_symbol.get_pin(element.pin)?;
 
         let pos = if let (Some(atref), Some(atpin)) = (element.atref, element.atpin) {
             self.pin_pos(atref, atpin)
         } else if let Some(dot) = element.atdot {
             arr1(&[dot.pos[0], dot.pos[1]])
+        } else if let Some(pos) = element.pos {
+            arr1(&[pos.0, pos.1])
         } else {
             self.last_pos.clone()
         };
@@ -308,16 +333,7 @@ impl Draw {
             }
         }
         self.place_property(&mut symbol).unwrap();
-        /* self.symbol_instance.push(SymbolInstance::new(
-            symbol.uuid.clone(),
-            reference.to_string(),
-            unit,
-            value.to_string(),
-            String::new(), /* TODO footprint.to_string()*/
-        )); */
         self.schema.push(0, SchemaElement::Symbol(symbol))?;
-        self.get_library(&element.library)?;
-
         Ok(())
     }
 
@@ -343,6 +359,17 @@ impl Draw {
             Ok(lib.clone())
         } else {
             let mut lib = self.libs.get(name).unwrap();
+            if !lib.extends.is_empty() {
+                let library = &name[0..name.find(':').unwrap()];
+                let mut extend_symbol = self.libs.get(format!("{}:{}", library, lib.extends.as_str()).as_str())?;
+                extend_symbol.property = lib.property.clone();
+                for subsymbol in &mut extend_symbol.symbols {
+                    let number = &subsymbol.lib_id[subsymbol.lib_id.find('_').unwrap()..subsymbol.lib_id.len()];
+                    subsymbol.lib_id = format!("{}{}", lib.lib_id, number);
+                }
+                extend_symbol.lib_id = name.to_string();
+                lib = extend_symbol;
+            }
             lib.lib_id = name.to_string();
             self.schema.page(0).unwrap().libraries.push(lib.clone());
             Ok(lib)
@@ -394,14 +421,20 @@ impl Draw {
         let mut offset = 0.0;
         let pins = lib.pins(symbol.unit)?.len();
         if pins == 1 {
-            //PINS!
             if positions[0] == 1 {
-                //west
-                /* vis_fields[0].pos = (_size[1][0]+1.28, symbol.pos[1])
-                assert vis_fields[0].text_effects, "pin has no text_effects"
-                vis_fields[0].text_effects.justify = [Justify.LEFT]
-                vis_fields[0].angle = 360 - symbol.angle */
-
+                symbol
+                    .property
+                    .iter_mut()
+                    .filter(filter_properties)
+                    .sorted_by(sort_properties)
+                    .for_each(|p| {
+                        if let Some(effects) = &mut p.effects {
+                            effects.justify.clear();
+                            effects.justify.push("left".to_string());
+                        }
+                        p.at = arr1(&[_size[[1, 0]] - LABEL_BORDER, symbol.at[1]]);
+                        p.angle = 0.0 - symbol.angle;
+                    });
                 return Ok(());
             } else if positions[3] == 1 {
                 //south
@@ -420,45 +453,34 @@ impl Draw {
                 return Ok(());
             } else if positions[2] == 1 {
                 //east
-                todo!();
-                /* vis_fields[0].pos = (_size[0][0]-1.28, symbol.pos[1])
-                assert vis_fields[0].text_effects, "pin has no text_effects"
-                vis_fields[0].text_effects.justify = [Justify.RIGHT]
-                vis_fields[0].angle = 360 - symbol.angle */
+                symbol
+                    .property
+                    .iter_mut()
+                    .filter(filter_properties)
+                    .sorted_by(sort_properties)
+                    .for_each(|p| {
+                        if let Some(effects) = &mut p.effects {
+                            effects.justify.clear();
+                            effects.justify.push("right".to_string());
+                        }
+                        p.at = arr1(&[_size[[0, 0]] - LABEL_BORDER, symbol.at[1]]);
+                        p.angle = 0.0 - symbol.angle;
+                    });
+                return Ok(());
             } else if positions[1] == 1 {
                 //south
-                let top_pos = if _size[[0, 1]] > _size[[1, 1]] {
-                    _size[[0, 1]] - ((vis_field as f64 - 1.0) * 2.0) + 0.64
-                } else {
-                    _size[[1, 1]] - ((vis_field as f64 - 1.0) * 2.0) + 0.64
-                };
-                //symbol.nodes_mut("property")?.iter_mut().for_each(|node| {
-                // let props: Vec<&Sexp> = symbol.get("property")?;
-                /* props.iter_mut().for_each(|node| {
-                    let effects: Vec<&Sexp> = get!(node, "effects").unwrap();
-                    if !effects.has("hide") {
-                        let mut field_pos: Array1<f64> = get!(node, "at");
-                        field_pos[1] = top_pos;
-                        node.set("at", field_pos).unwrap();
-                        for n in &mut node.values {
-                            if let Sexp::Node(name, effects) = n {
-                                if name == "effects" {
-                                    let index: usize = 0;
-                                    for val in effects {
-                                        if let Sexp::Node(name, nodes) = val {
-                                            if name == "justify" {
-                                                effects.remove(index);                                           }
-                                        }
-                                        index += 1;
-                                    }
-                                }
-                            }
+                symbol
+                    .property
+                    .iter_mut()
+                    .filter(filter_properties)
+                    .sorted_by(sort_properties)
+                    .for_each(|p| {
+                        if let Some(effects) = &mut p.effects {
+                            effects.justify.clear();
                         }
-                        //TODO set!(node, "at", 2, 360.0 - angle);
-                        offset += 2.0;
-                    }
-                }); */
-                //vis_fields[0].text_effects.justify = [Justify.CENTER]
+                        p.at = arr1(&[symbol.at[0], _size[[0, 1]] - LABEL_BORDER]);
+                        p.angle = 0.0 - symbol.angle;
+                    });
                 return Ok(());
             }
         } else {
@@ -466,6 +488,11 @@ impl Draw {
                 _size[[0, 1]] - ((vis_field as f64 - 1.0) * LABEL_BORDER) - LABEL_BORDER
             } else {
                 _size[[1, 1]] - ((vis_field as f64 - 1.0) * LABEL_BORDER) - LABEL_BORDER
+            };
+            let bottom_pos = if _size[[0, 1]] < _size[[1, 1]] {
+                _size[[1, 1]] + LABEL_BORDER
+            } else {
+                _size[[0, 1]] + LABEL_BORDER
             };
             if positions[3] == 0 {
                 //north
@@ -482,7 +509,6 @@ impl Draw {
                         p.angle = 0.0 - symbol.angle;
                         offset -= LABEL_BORDER;
                     });
-
                 return Ok(());
             } else if positions[2] == 0 {
                 //east
@@ -532,9 +558,20 @@ impl Draw {
                 return Ok(());
             } else if positions[1] == 0 {
                 //south
+                symbol
+                    .property
+                    .iter_mut()
+                    .filter(filter_properties)
+                    .sorted_by(sort_properties)
+                    .for_each(|p| {
+                        if let Some(effects) = &mut p.effects {
+                            effects.justify.clear();
+                        }
+                        p.at = arr1(&[symbol.at[0], bottom_pos + offset]);
+                        p.angle = 0.0 - symbol.angle;
+                        offset += LABEL_BORDER;
+                    });
                 return Ok(());
-            } else {
-                return Ok(()); //todo!();
             }
         }
         Err(Error::ParseError)
@@ -573,6 +610,7 @@ fn elektron(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<model::Dot>()?;
     m.add_class::<model::Label>()?;
     m.add_class::<model::Element>()?;
+    m.add_class::<model::Nc>()?;
     m.add_class::<circuit::Circuit>()?;
     m.add_class::<circuit::Simulation>()?;
     Ok(())
