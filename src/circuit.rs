@@ -220,8 +220,13 @@ impl Simulation {
             simulation: spice::Simulation::new(circuit.circuit),
         }
     }
+
     pub fn tran(&self, step: &str, stop: &str, start: &str) -> HashMap<String, Vec<f64>> {
         self.simulation.tran(step, stop, start)
+    }
+
+    pub fn ac(&self, start_frequency: &str, stop_frequency: &str, number_of_points: u32,  variation: &str) -> HashMap<String, Vec<f64>> {
+        self.simulation.ac(start_frequency, stop_frequency, number_of_points, variation)
     }
 
     pub fn plot(&self, name: &str, filename: Option<&str>) -> Result<(), Error> {
