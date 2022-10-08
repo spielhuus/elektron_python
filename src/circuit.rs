@@ -2,12 +2,9 @@
 use std::collections::HashMap;
 
 use elektron_spice as spice;
-use elektron_ngspice::ComplexSlice; 
 use pyo3::prelude::*;
 
 use crate::error::Error;
-
-use plotters::prelude::*;
 
 #[pyclass]
 #[derive(Debug, Clone, PartialEq)]
@@ -221,15 +218,33 @@ impl Simulation {
         }
     }
 
-    pub fn tran(&self, step: &str, stop: &str, start: &str) -> HashMap<String, Vec<f64>> {
-        self.simulation.tran(step, stop, start)
+    pub fn tran(&mut self, py: Python, step: &str, stop: &str, start: &str) -> HashMap<String, Vec<f64>> {
+        let res = self.simulation.tran(step, stop, start);
+        if let Some(buffer) = &self.simulation.buffer {
+            let mut res_string = Vec::new();
+            for line in buffer {
+                let line = line.replace('\r', "\\n");
+                res_string.push(line.replace('\"', "\\\""));
+            }
+            py.eval(format!("print('{}')", res_string.join("\\n")).as_str(), None, None).unwrap();
+        }
+        res
     }
 
-    pub fn ac(&self, start_frequency: &str, stop_frequency: &str, number_of_points: u32,  variation: &str) -> HashMap<String, Vec<f64>> {
-        self.simulation.ac(start_frequency, stop_frequency, number_of_points, variation)
+    pub fn ac(&mut self, py: Python, start_frequency: &str, stop_frequency: &str, number_of_points: u32,  variation: &str) -> HashMap<String, Vec<f64>> {
+        let res = self.simulation.ac(start_frequency, stop_frequency, number_of_points, variation);
+        if let Some(buffer) = &self.simulation.buffer {
+            let mut res_string = Vec::new();
+            for line in buffer {
+                let line = line.replace('\r', "");
+                res_string.push(line.replace('\"', "\\\""));
+            }
+            py.eval(format!("print('{}')", res_string.join("\\n")).as_str(), None, None).unwrap();
+        }
+        res
     }
 
-    pub fn plot(&self, name: &str, filename: Option<&str>) -> Result<(), Error> {
+    /* pub fn plot(&self, name: &str, filename: Option<&str>) -> Result<(), Error> {
         /* let plot = self.ngspice.current_plot().unwrap();
         let vecs = self.ngspice.all_vecs(&plot).unwrap(); */
         let re = self.simulation.ngspice.vector_info("time").unwrap();
@@ -298,5 +313,5 @@ impl Simulation {
     root.present().unwrap();
 
     Ok(())
-    }
+    } */
 }

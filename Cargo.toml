@@ -7,24 +7,20 @@ edition = "2021"
 name = "elektron_python"
 crate-type = ["rlib", "cdylib"]
 
-# [profile.release]
-# # or "z"
-# opt-level = "s"
-# lto = "fat"
-# codegen-units = 1
+[profile.release]
+# or "z"
+opt-level = "s"
+lto = "fat"
+codegen-units = 1
 
 [dependencies]
-pyo3 = { version = "0.16.5", features = ["extension-module"] }
-thiserror = "1.0.32"
+# pyo3 = { version = "0.16.5", features = ["extension-module"] }
+pyo3 = { version = "0.17", features = ["extension-module"] }
+thiserror = "1.0.37"
 lazy_static = "1.4.0"
-regex = "1.6.0"
-rust-fuzzy-search = "0.1.1"
-ndarray = "0.15.4"
-itertools = "0.10.3"
-comfy-table = "6.0.0"
-clap = { version = "4", features = ["derive"] }
+ndarray = "0.15.6"
+itertools = "0.10.5"
 rand = "0.8.5"
-plotters = "0.3.4"
 elektron_sexp = "0.1"
 elektron_spice = "0.1"
 elektron_plot = "0.1"
