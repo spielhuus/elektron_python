@@ -116,27 +116,33 @@ impl Draw {
         Ok(())
     }
 
+    #[args(netlist=false)]
     pub fn plot(
         &mut self,
         filename: Option<&str>,
         border: bool,
         scale: f64,
         imagetype: &str,
+        netlist: bool,
     ) -> Result<Option<Vec<u8>>, Error> {
         let theme = if let Ok(theme) = std::env::var("ELEKTRON_THEME") {
             theme
         } else {
             String::from("kicad_2000")
         };
+        let netlist = if netlist { 
+            Some(elektron_spice::Netlist::from(&self.schema).unwrap())
+        } else { None };
+
         if let Some(filename) = filename {
-            plot::plot_schema(&self.schema, filename, scale, border, theme.as_str()).unwrap();
+            plot::plot_schema(&self.schema, filename, scale, border, theme.as_str(), netlist).unwrap();
             Ok(None)
         } else {
             let mut rng = rand::thread_rng();
             let num: u32 = rng.gen();
             let filename =
                 String::new() + temp_dir().to_str().unwrap() + "/" + &num.to_string() + "." + imagetype;
-            plot::plot_schema(&self.schema, filename.as_str(), scale, border, theme.as_str()).unwrap();
+            plot::plot_schema(&self.schema, filename.as_str(), scale, border, theme.as_str(), netlist).unwrap();
             
             let mut f = File::open(&filename).expect("no file found");
             let metadata = fs::metadata(&filename).expect("unable to read metadata");
