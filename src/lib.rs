@@ -1,6 +1,5 @@
 #![allow(clippy::borrow_deref_ref)]
 use lazy_static::lazy_static;
-use pyo3::types::PyDict;
 use crate::circuit::Circuit;
 use crate::error::Error;
 use elektron_sexp::{
@@ -126,7 +125,7 @@ impl Draw {
         scale: f64,
         imagetype: &str,
         netlist: bool,
-    ) -> Result<(), Error> {
+    ) -> Result<Option<Vec<Vec<u8>>>, Error> {
         let theme = if let Ok(theme) = std::env::var("ELEKTRON_THEME") {
             theme
         } else {
@@ -138,19 +137,19 @@ impl Draw {
 
         if let Some(filename) = filename {
             plot::plot_schema(&self.schema, None, scale, border, theme.as_str(), netlist, Some(imagetype)).unwrap();
-            Ok(())
+            Ok(None)
         } else {
             /* let mut rng = rand::thread_rng();
             let num: u32 = rng.gen();
             let filename =
                 String::new() + temp_dir().to_str().unwrap() + "/" + &num.to_string() + "." + imagetype; */
-            let res = plot::plot_schema(&self.schema, None, scale, border, theme.as_str(), netlist, Some(imagetype)).unwrap();
+            let res = plot::plot_schema_buffer(&self.schema, scale, border, theme.as_str(), netlist, imagetype).unwrap();
             
             /* let mut f = File::open(&filename).expect("no file found");
             let metadata = fs::metadata(&filename).expect("unable to read metadata");
             let mut buffer = vec![0; metadata.len() as usize];
             f.read_exact(&mut buffer).expect("buffer overflow"); */
-            Ok(())
+            Ok(Some(res))
             //print_from_file(&filename, &Config::default()).unwrap();
         }
     }
