@@ -1,5 +1,6 @@
 #![allow(clippy::borrow_deref_ref)]
 use lazy_static::lazy_static;
+use pyo3::types::PyDict;
 use crate::circuit::Circuit;
 use crate::error::Error;
 use elektron_sexp::{
@@ -119,6 +120,7 @@ impl Draw {
     #[args(netlist=false)]
     pub fn plot(
         &mut self,
+        mut py: Python,
         filename: Option<&str>,
         border: bool,
         scale: f64,
@@ -143,7 +145,8 @@ impl Draw {
             let filename =
                 String::new() + temp_dir().to_str().unwrap() + "/" + &num.to_string() + "." + imagetype; */
             println!("output plot to buffer");
-            plot::plot_schema(&self.schema, None, scale, border, theme.as_str(), netlist, Some(imagetype)).unwrap();
+            let res = plot::plot_schema(&self.schema, None, scale, border, theme.as_str(), netlist, Some(imagetype)).unwrap();
+            println!("Pydict: {:?}", PyDict::new(py));
             println!(">> output plot to buffer: {}", plot::get_plots().len());
             
             /* let mut f = File::open(&filename).expect("no file found");
