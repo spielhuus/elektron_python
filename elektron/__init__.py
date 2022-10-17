@@ -2,7 +2,9 @@ from .elektron import Draw as RDraw
 from .elektron import Line, Dot, Label, Element, Simulation, Circuit
 
 PLOTS = []
-my_global ="aiee"
+
+def plots():
+    return PLOTS
 
 class Draw:
     def __init__(self, library_path):
