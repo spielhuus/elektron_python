@@ -144,6 +144,7 @@ impl Draw {
                 String::new() + temp_dir().to_str().unwrap() + "/" + &num.to_string() + "." + imagetype; */
             println!("output plot to buffer");
             plot::plot_schema(&self.schema, None, scale, border, theme.as_str(), netlist, Some(imagetype)).unwrap();
+            println!(">> output plot to buffer: {}", plot::get_plots().len());
             
             /* let mut f = File::open(&filename).expect("no file found");
             let metadata = fs::metadata(&filename).expect("unable to read metadata");
