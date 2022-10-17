@@ -144,10 +144,7 @@ impl Draw {
             let num: u32 = rng.gen();
             let filename =
                 String::new() + temp_dir().to_str().unwrap() + "/" + &num.to_string() + "." + imagetype; */
-            println!("output plot to buffer");
             let res = plot::plot_schema(&self.schema, None, scale, border, theme.as_str(), netlist, Some(imagetype)).unwrap();
-            println!("Pydict: {:?}", PyDict::new(py));
-            println!(">> output plot to buffer: {}", plot::get_plots().len());
             
             /* let mut f = File::open(&filename).expect("no file found");
             let metadata = fs::metadata(&filename).expect("unable to read metadata");
