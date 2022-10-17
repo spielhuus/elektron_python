@@ -93,5 +93,5 @@ simulation = Simulation(circuit)
 print("tran")
 simulation.tran("1us", "10ms", "0")
 print("plot")
-simulation.plot("output", "draw_output.svg")
+#simulation.plot("output", "draw_output.svg")
 

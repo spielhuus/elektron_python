@@ -119,7 +119,6 @@ impl Draw {
     #[args(netlist=false)]
     pub fn plot(
         &mut self,
-        mut py: Python,
         filename: Option<&str>,
         border: bool,
         scale: f64,

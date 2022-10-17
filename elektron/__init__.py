@@ -1,23 +1,20 @@
-from .elektron import *
+from .elektron import Draw as RDraw
+from .elektron import Line, Dot, Label, Element, Simulation, Circuit
 
+class Draw:
+    def __init__(self, library_path):
+        self.el = RDraw(library_path)
 
-# impl Draw {
-#     #[new]
-#     pub fn new(library_path: Vec<String>) -> Self {
+    def add(self, item):
+        self.el.add(item)
 
-#     fn add(&mut self, item: &'_ PyAny) -> PyResult<()> {
+    def write(self, filename):
+        self.el.write(filename)
 
-#     pub fn write(&mut self, filename: &str) -> Result<(), Error> {
+    def plot(self, filename, border, scale, imagetype, netlist=False):
+        global PLOTS
+        PLOTS = self.el.plot(filename, border, scale, imagetype, netlist)
 
-#     #[args(netlist=false)]
-#     pub fn plot(
-#         &mut self,
-#         mut py: Python,
-#         filename: Option<&str>,
-#         border: bool,
-#         scale: f64,
-#         imagetype: &str,
-#         netlist: bool,
-#     ) -> Result<(), Error> {
+    def circuit(self, pathlist):
+        return self.el.circuit(pathlist)
 
-#     pub fn circuit(&mut self, pathlist: Vec<String>) -> Circuit {
