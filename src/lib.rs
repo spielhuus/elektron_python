@@ -124,7 +124,7 @@ impl Draw {
         scale: f64,
         imagetype: &str,
         netlist: bool,
-    ) -> Result<Option<Vec<u8>>, Error> {
+    ) -> Result<(), Error> {
         let theme = if let Ok(theme) = std::env::var("ELEKTRON_THEME") {
             theme
         } else {
@@ -135,20 +135,20 @@ impl Draw {
         } else { None };
 
         if let Some(filename) = filename {
-            plot::plot_schema(&self.schema, filename, scale, border, theme.as_str(), netlist).unwrap();
-            Ok(None)
+            plot::plot_schema(&self.schema, None, scale, border, theme.as_str(), netlist, Some(imagetype)).unwrap();
+            Ok(())
         } else {
-            let mut rng = rand::thread_rng();
+            /* let mut rng = rand::thread_rng();
             let num: u32 = rng.gen();
             let filename =
-                String::new() + temp_dir().to_str().unwrap() + "/" + &num.to_string() + "." + imagetype;
-            plot::plot_schema(&self.schema, filename.as_str(), scale, border, theme.as_str(), netlist).unwrap();
+                String::new() + temp_dir().to_str().unwrap() + "/" + &num.to_string() + "." + imagetype; */
+            plot::plot_schema(&self.schema, None, scale, border, theme.as_str(), netlist, Some(imagetype)).unwrap();
             
-            let mut f = File::open(&filename).expect("no file found");
+            /* let mut f = File::open(&filename).expect("no file found");
             let metadata = fs::metadata(&filename).expect("unable to read metadata");
             let mut buffer = vec![0; metadata.len() as usize];
-            f.read_exact(&mut buffer).expect("buffer overflow");
-            Ok(Some(buffer))
+            f.read_exact(&mut buffer).expect("buffer overflow"); */
+            Ok(())
             //print_from_file(&filename, &Config::default()).unwrap();
         }
     }
