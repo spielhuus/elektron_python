@@ -15,6 +15,7 @@ class Draw:
         self.el.write(filename)
 
     def plot(self, filename, border, scale, imagetype, netlist=False):
+        global PLOTS
         PLOTS.append(self.el.plot(filename, border, scale, imagetype, netlist))
 
     def circuit(self, pathlist):
