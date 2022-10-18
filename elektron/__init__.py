@@ -105,5 +105,6 @@ class _BackendElektron(_Backend):
 
     @classmethod
     def show(cls, *args, **kwargs):
+        print("show is called")
         _Backend.show(*args, **kwargs)
         Gcf.destroy_all()
