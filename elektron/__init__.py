@@ -1,6 +1,7 @@
 from .elektron import Draw as RDraw
 from .elektron import Line, Dot, Label, Element, Simulation, Circuit
 
+print("load elektron py")
 PLOTS = []
 
 def plots():
@@ -72,11 +73,9 @@ class FigureManagerElektron(FigureManagerBase):
         #     dpi = self.canvas.figure.dpi
         #     self.canvas.figure.set_size_inches((px[0] / dpi, px[1] / dpi))
         
-        print("plot elektron")
         with BytesIO() as buf:
             global PLOTS
             self.canvas.figure.savefig(buf, format='svg')
-            print("plot bytes")
             PLOTS = [list(bytes(buf.getvalue()))]
             # icat('--align', 'left', output=False, input=buf.getbuffer())
 
@@ -105,6 +104,5 @@ class _BackendElektron(_Backend):
 
     @classmethod
     def show(cls, *args, **kwargs):
-        print("show is called")
         _Backend.show(*args, **kwargs)
         Gcf.destroy_all()
