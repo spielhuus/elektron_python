@@ -72,11 +72,12 @@ class FigureManagerElektron(FigureManagerBase):
         #     dpi = self.canvas.figure.dpi
         #     self.canvas.figure.set_size_inches((px[0] / dpi, px[1] / dpi))
         
-
+        print("plot elektron")
         with BytesIO() as buf:
             global PLOTS
             self.canvas.figure.savefig(buf, format='svg')
-            [list(bytes(buf.getvalue()))]
+            print("plot bytes")
+            PLOTS = [list(bytes(buf.getvalue()))]
             # icat('--align', 'left', output=False, input=buf.getbuffer())
 
 
